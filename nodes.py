@@ -569,8 +569,9 @@ class UmiTextGen:
     def INPUT_TYPES(self):
         return {
             "required": {
-                "text": ("STRING", {"multiline": True, "placeholder": " \n "}),
+                "text": ("STRING", {"multiline": True, "placeholder": "This is {good|bad}. \n "}),
                 "separator": ("STRING", {"multiline": False, "default": ", "}),
+                "remove_newlines": (["on", "off"],),
                 "cache_files": (["on", "off"],),
                 "verbose": (["off", "on"],),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
@@ -590,7 +591,7 @@ class UmiTextGen:
     def __init__(self):
         pass
 
-    def encode(self, text, cache_files, verbose, seed, append_to_this_pos="", append_to_this_neg="", separator=", "):
+    def encode(self, text, cache_files, verbose='off', seed='0', remove_newlines='off', append_to_this_pos="", append_to_this_neg="", separator=", "):
         if not append_to_this_pos:
             append_to_this_pos = ""
         if not append_to_this_neg:
@@ -604,7 +605,8 @@ class UmiTextGen:
             old_prompt = prompt
             # Getting rid of useless things that sometimes pops up in my prompts
             prompt = prompt.replace("  ", " ").replace(",,", ",").replace(", ,", ",").replace("\n ", "\n").replace("\n\n\n", "\n\n").replace(" ,", ",").replace("\n, ", "\n").replace("\n ", "\n")
-
+            if remove_newlines == "on":
+                prompt = prompt.replace("\n", " ")
         prompt, negs = find_our_negs(prompt)
         if append_to_this_pos != "":
             prompt = f"{append_to_this_pos}{separator}{prompt}"
@@ -628,6 +630,7 @@ class RandomLineSelection:
             "required": {
                 "text": ("STRING", {"multiline": True, "placeholder": " \n "}),
                 "separator": ("STRING", {"multiline": False, "default": ", "}),
+                "remove_newlines": (["on", "off"],),
                 "cache_files": (["on", "off"],),
                 "verbose": (["off", "on"],),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
@@ -646,7 +649,7 @@ class RandomLineSelection:
     def __init__(self):
         pass
 
-    def encode(self, text, cache_files, verbose, seed, append_to_this_pos="", append_to_this_neg="", separator=", "):
+    def encode(self, text, cache_files, verbose='off', seed='0', remove_newlines='off', append_to_this_pos="", append_to_this_neg="", separator=", "):
         # "seed" exists to make comfy execute this node in every new job and not just cache & reuse the previous output
         r_line = random_line(text)
         cache_files = True if cache_files == "on" else False
@@ -656,7 +659,8 @@ class RandomLineSelection:
         while line != old_line:
             old_line = line
             line = line.replace("  ", " ").replace(",,", ",").replace(", ,", ",").replace("\n ", "\n").replace("\n\n\n", "\n\n").replace(" ,", ",").replace("\n, ", "\n").replace("\n,", "\n").replace("\n ", "\n").replace(", \n", ", ").replace(",\n", ", ")
-
+            if remove_newlines == "on":
+                line = line.replace("\n", " ")
         line, negs = find_our_negs(line)
         if append_to_this_pos != "":
             line = f"{append_to_this_pos}{separator}{line}"
